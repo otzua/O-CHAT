@@ -2,6 +2,8 @@ package com.ochat.android.onboarding
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -174,10 +176,11 @@ fun InitializationErrorScreen(
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                Text(
-                    text = stringResource(R.string.warning_emoji),
-                    style = MaterialTheme.typography.headlineLarge,
-                    modifier = Modifier.padding(16.dp)
+                Icon(
+                    imageVector = Icons.Filled.WarningAmber,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(16.dp).size(40.dp)
                 )
             }
 
