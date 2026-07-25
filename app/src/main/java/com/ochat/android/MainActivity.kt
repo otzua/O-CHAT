@@ -40,7 +40,7 @@ import com.ochat.android.onboarding.PermissionManager
 import com.ochat.android.ui.ChatScreen
 import com.ochat.android.ui.ChatViewModel
 import com.ochat.android.ui.OrientationAwareActivity
-import com.ochat.android.ui.theme.BitchatTheme
+import com.ochat.android.ui.theme.OChatTheme
 import com.ochat.android.wifiaware.WifiAwareController
 import com.ochat.android.nostr.PoWPreferenceManager
 import com.ochat.android.services.VerificationService
@@ -151,7 +151,7 @@ class MainActivity : OrientationAwareActivity() {
         )
         
         setContent {
-            BitchatTheme {
+            OChatTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     containerColor = MaterialTheme.colorScheme.background

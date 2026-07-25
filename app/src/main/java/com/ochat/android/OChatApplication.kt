@@ -8,7 +8,7 @@ import com.ochat.android.net.ArtiTorManager
 /**
  * Main application class for bitchat Android
  */
-class BitchatApplication : Application() {
+class OChatApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()

@@ -44,7 +44,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun BitchatTheme(
+fun OChatTheme(
     darkTheme: Boolean? = null,
     content: @Composable () -> Unit
 ) {
