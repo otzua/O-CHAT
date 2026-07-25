@@ -645,6 +645,8 @@ fun AboutSheet(
                                 fontFamily = FontFamily.Monospace,
                                 color = colorScheme.onSurface.copy(alpha = 0.4f)
                             )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            com.ochat.android.ui.home.CreditBlock()
                             Spacer(modifier = Modifier.height(20.dp))
                         }
                     }

@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -44,6 +45,11 @@ fun OChatApp(viewModel: ChatViewModel) {
     var userSheetTarget by remember { mutableStateOf<String?>(null) }
     var userSheetMessage by remember { mutableStateOf<BitchatMessage?>(null) }
     var passwordInput by remember { mutableStateOf("") }
+
+    // First-run welcome. Seeded from prefs so it appears once per install, not once per
+    // composition, and is recorded as seen the moment it is dismissed.
+    val context = LocalContext.current
+    var showWelcome by remember { mutableStateOf(!WelcomePreferenceManager.hasSeenWelcome(context)) }
 
     val showAppInfo by viewModel.showAppInfo.collectAsStateWithLifecycle()
     val showVerificationSheet by viewModel.showVerificationSheet.collectAsStateWithLifecycle()
@@ -171,6 +177,15 @@ fun OChatApp(viewModel: ChatViewModel) {
             isPresented = true,
             onDismiss = viewModel::hideSecurityVerificationSheet,
             viewModel = viewModel
+        )
+    }
+
+    if (showWelcome) {
+        WelcomeDialog(
+            onDismiss = {
+                WelcomePreferenceManager.markWelcomeSeen(context)
+                showWelcome = false
+            }
         )
     }
 }

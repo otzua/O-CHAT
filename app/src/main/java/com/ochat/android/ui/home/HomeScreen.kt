@@ -160,12 +160,15 @@ fun HomeScreen(
             }
         }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            when (selectedTab) {
-                TAB_CHATS -> ChatsTab(viewModel, onOpenConversation)
-                TAB_CHANNELS -> ChannelsTab(viewModel, onOpenConversation, onShowLocationChannels)
-                else -> PeopleTab(viewModel, onOpenConversation)
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            Box(modifier = Modifier.weight(1f)) {
+                when (selectedTab) {
+                    TAB_CHATS -> ChatsTab(viewModel, onOpenConversation)
+                    TAB_CHANNELS -> ChannelsTab(viewModel, onOpenConversation, onShowLocationChannels)
+                    else -> PeopleTab(viewModel, onOpenConversation)
+                }
             }
+            CreditFooterLine()
         }
     }
 }
