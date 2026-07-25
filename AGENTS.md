@@ -1,9 +1,11 @@
-# Bitchat Android - Agent Guide
+# OChat Android - Agent Guide
 
-This document provides context, architectural insights, and development standards for AI agents working on the Bitchat Android codebase.
+This document provides context, architectural insights, and development standards for agents working on the OChat codebase.
+
+OChat is a fork of bitchat-android (GPL-3.0) with a rebuilt user interface. The networking, protocol and crypto layers are unchanged from upstream.
 
 ## 1. Project Overview
-**Bitchat** is a decentralized, off-grid communication application focused on privacy and censorship resistance. It utilizes mesh networking (primarily Bluetooth LE and Tor/Arti) to enable peer-to-peer messaging without centralized servers.
+**OChat** is a decentralized, off-grid communication application focused on privacy and censorship resistance. It utilizes mesh networking (primarily Bluetooth LE and Tor/Arti) to enable peer-to-peer messaging without centralized servers.
 
 **Key Technologies:**
 - **Language:** Kotlin (JVM Target 1.8)
@@ -16,11 +18,12 @@ This document provides context, architectural insights, and development standard
 ## 2. Architecture & Directory Structure
 The application follows a clean architecture pattern, heavily modularized by feature within the `app` module.
 
-**Root Package:** `com.bitchat.android`
+**Root Package:** `com.ochat.android` (applicationId `com.ochat.droid`)
 
 | Directory | Purpose |
 |-----------|---------|
-| `ui/` | **Presentation Layer**: Jetpack Compose screens, themes, and ViewModels. |
+| `ui/home/` | **OChat UI**: navigation host, tabbed conversation list, full-screen chat, message bubbles, credits. |
+| `ui/` | **Presentation Layer**: screens and components inherited from bitchat, plus `ChatViewModel` and `ChatState`. |
 | `service/` | **Core Service**: Contains `MeshForegroundService`, managing persistent background connectivity. |
 | `mesh/` | **Mesh Networking**: Logic for peer discovery, advertising, and message routing. |
 | `protocol/` | **Wire Protocol**: Definitions of messages exchanged between peers. |
@@ -49,6 +52,7 @@ The application follows a clean architecture pattern, heavily modularized by fea
 
 ### Code Style
 - **Kotlin**: Adhere to official Kotlin coding conventions.
+- **No emoji**: the interface uses vector icons, never emoji characters. This applies to strings.xml and to any UI text.
 - **Compose**: Use functional components. Hoist state to ViewModels where possible.
 - **Coroutines**: Use `suspend` functions for all I/O operations. strictly avoid blocking the main thread.
 - **Naming**: Clear, descriptive names. Follow standard Android naming patterns (e.g., `*ViewModel`, `*Repository`, `*Screen`).
@@ -64,6 +68,10 @@ The application follows a clean architecture pattern, heavily modularized by fea
 1.  **Permissions**: The app relies heavily on dangerous runtime permissions (Location, Bluetooth Scan/Connect/Advertise, Audio Recording). Always verify permission handling patterns in `MainActivity` or permission wrappers before adding new hardware features.
 2.  **Hardware Dependency**: Features like BLE are difficult to emulate. When writing code for these, focus on robust error handling and defensive programming as hardware behavior can be flaky.
 3.  **Background Limits**: Android enforces strict background execution limits. Network operations intended to persist must be tied to the `MeshForegroundService`.
+4.  **Interop-critical values - do not rename**: the `"bitchat1:"` Nostr DM wire prefix, the BLE `SERVICE_UUID`/`CHARACTERISTIC_UUID`, and every `SharedPreferences` file name (`bitchat_identity`, `bitchat_crypto*`, ...). Renaming the first two breaks compatibility with bitchat clients; renaming the third discards users' identity keys. No test will catch either. See `docs/BRANDING.md`.
+5.  **Keep UI above the ViewModel line**: the OChat interface is a projection over flows `ChatState` already exposes. Do not introduce a second source of truth for chat data.
+6.  **Back navigation belongs to the NavHost**: never add an activity-level `OnBackPressedCallback` for chat state. It runs before Navigation and swallows the press, ending a chat without leaving the screen.
+7.  **JDK**: Gradle 8.13 cannot run on JDK 24. Use JDK 17 or 21, e.g. Android Studio's bundled runtime at `/Applications/Android Studio.app/Contents/jbr/Contents/Home`.
 
 ## 6. Common Tasks
 - **Build Debug APK**: `./gradlew assembleDebug`
@@ -71,4 +79,4 @@ The application follows a clean architecture pattern, heavily modularized by fea
 - **Clean Build**: `./gradlew clean`
 
 ---
-*Note: This file is intended to assist AI agents in navigating and modifying the codebase efficiently. Always verify context by reading the actual files before making changes.*
+*Note: This file is intended to assist agents in navigating and modifying the codebase efficiently. Always verify context by reading the actual files before making changes.*
