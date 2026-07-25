@@ -96,6 +96,11 @@ private fun PagerTabIndicator(
 
     Box(
         Modifier
+            // fillMaxWidth must come first: wrapContentSize aligns within the incoming
+            // constraints, so without a full-width parent the offset is measured against
+            // the wrong box and the underline lands in the wrong place. This mirrors what
+            // Material3's own tabIndicatorOffset does.
+            .fillMaxWidth()
             .wrapContentSize(Alignment.BottomStart)
             .offset(x = left)
             .width(width)

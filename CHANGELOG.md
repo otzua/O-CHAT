@@ -7,6 +7,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Entries below `OChat 1.0.0` are inherited from upstream
 [bitchat-android](https://github.com/permissionlesstech/bitchat-android).
 
+## [OChat 1.1.0]
+
+### Added
+- **Swipe between tabs.** Chats, Channels and People are a pager now, so they can be
+  swiped as well as tapped. The tab underline interpolates against the pager offset rather
+  than snapping when the swipe settles, so it tracks the finger through the drag.
+- Unread counts on the Chats and Channels tab labels, so activity in a tab you are not
+  looking at is visible without switching to it.
+- Live mesh status in the top bar ("3 people nearby" / "searching for people nearby"),
+  crossfaded so it does not pop as peers come and go.
+- Haptic feedback when sending. Mesh delivery is not instant, so the tap itself needs to
+  feel acknowledged.
+- New launcher icon: an amber "O" whose tail turns it into a speech bubble.
+
+### Changed
+- Messages and conversation rows animate into place rather than appearing instantly, which
+  matters most when rows reorder as a conversation becomes the most recent.
+- Opening a conversation slides in and back slides out, so a chat reads as a layer above
+  the list rather than a cut.
+
+### Fixed
+- Restores the jump-to-latest button in conversations. It existed in the original
+  ChatScreen and was lost when that screen was replaced, leaving no way back to the newest
+  message on a long backlog except scrolling by hand.
+- The tab indicator was missing `fillMaxWidth()` before `wrapContentSize`, so its offset
+  would have been measured against the wrong box and the underline mispositioned.
+
+### Performance
+This has to hold up on low-end hardware, so:
+- `beyondViewportPageCount` is 0 - only the visible tab is composed. Pre-composing
+  neighbours would build three lists during a cold start.
+- Every animated property is cheap: alpha, scale, translation. No blur, no animated
+  shadows, no `animateContentSize` inside a scrolling list.
+- Timings live in `Motion.kt` and run 120-280ms.
+
+### Not verified
+The interface changes in this release have been compiled and reviewed but **not run on a
+device**. Motion timings in particular are judged by eye and have not been.
+
+---
+
 ## [OChat 1.0.1]
 
 ### Fixed
