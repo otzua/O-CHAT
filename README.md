@@ -1,308 +1,204 @@
-<p align="center">
-    <img src="https://github.com/user-attachments/assets/188c42f8-d249-4a72-b27a-e2b4f10a00a8" alt="Bitchat Android Logo" width="480">
-</p>
+# OChat
+
+**Decentralized, off-grid messaging that looks and feels like a normal chat app.**
+
+OChat is a fork of [bitchat-android](https://github.com/permissionlesstech/bitchat-android)
+with a rebuilt interface. The networking is untouched — messages still travel peer-to-peer
+over Bluetooth LE mesh with no servers, no accounts and no phone numbers — but the terminal
+style interface has been replaced with a conventional messaging layout.
+
+Made by Krish · [github.com/otzua](https://github.com/otzua)
 
 > [!WARNING]
-> This software has not received external security review and may contain vulnerabilities and may not necessarily meet its stated security goals. Do not use it for sensitive use cases, and do not rely on its security until it has been reviewed. Work in progress.
+> This software has not received external security review and may contain vulnerabilities,
+> and may not necessarily meet its stated security goals. Do not use it for sensitive
+> purposes and do not rely on its security until it has been reviewed. Work in progress.
 
-# bitchat for Android
+---
 
-A secure, decentralized, peer-to-peer messaging app that works over Bluetooth mesh networks. No internet required for mesh chats, no servers, no phone numbers - just pure encrypted communication. Bitchat also supports geohash channels, which use an internet connection to connect you with others in your geographic area.
+## Why this fork exists
 
-This is the **Android port** of the original [bitchat iOS app](https://github.com/jackjackbits/bitchat), maintaining 100% protocol compatibility for cross-platform communication.
+bitchat is excellent software with an interface aimed at people comfortable in a terminal.
+Messages render as a single scrolling log, private chats open as bottom sheets, and most
+navigation happens through IRC-style slash commands.
 
-## Install bitchat
+That is a real barrier for anyone who has only ever used a mainstream messenger. OChat keeps
+every capability and rearranges the presentation:
 
-You can download the latest version of bitchat for Android from the [GitHub Releases page](https://github.com/permissionlesstech/bitchat-android/releases).
+| | bitchat | OChat |
+|---|---|---|
+| Home screen | Single message timeline | Conversation list with Chats / Channels / People tabs |
+| Private chats | Bottom sheet | Full screen with back navigation |
+| Messages | One-line log entries, monospace | Left/right bubbles, sans-serif |
+| Delivery status | Check characters in a text overlay | Drawn ticks inside the bubble |
+| Colours | Terminal green | Amber on near-black, with a light theme |
+| Slash commands | Primary interface | Still work, now with UI equivalents |
 
-Or you can:
+**Nothing about the protocol changed.** OChat talks to unmodified bitchat clients on Android
+and iOS.
 
-[<img alt="Get it on Google Play" height="60" src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"/>](https://play.google.com/store/apps/details?id=com.bitchat.droid)
+## Compatibility
 
-**Instructions:**
+Interoperability is preserved deliberately. These values were left exactly as upstream
+defines them:
 
-1.  **Download the APK:** On your Android device, navigate to the link above and download the latest `.apk` file. Open it.
-2.  **Allow Unknown Sources:** On some devices, before you can install the APK, you may need to enable "Install from unknown sources" in your device's settings. This is typically found under **Settings > Security** or **Settings > Apps & notifications > Special app access**.
-3.  **Install:** Open the downloaded `.apk` file to begin the installation.
+- The `bitchat1:` prefix used for Nostr direct messages
+- The BLE service and characteristic UUIDs
+- The binary packet format, Noise handshake and all crypto
+- Every `SharedPreferences` file name, so an existing install keeps its identity keys
 
-## License
-
-This project is released into the public domain. See the [LICENSE](LICENSE.md) file for details.
+Renaming the Android package (`com.bitchat.android` → `com.ochat.android`) has no effect on
+any of this — mesh identity lives in the BLE UUIDs, not the package name.
 
 ## Features
 
-- **✅ Cross-Platform Compatible**: Full protocol compatibility with iOS bitchat
-- **✅ Decentralized Mesh Network**: Automatic peer discovery and multi-hop message relay over Bluetooth LE
-- **✅ End-to-End Encryption**: X25519 key exchange + AES-256-GCM for private messages
-- **✅ Channel-Based Chats**: Topic-based group messaging with optional password protection
-- **✅ Store & Forward**: Messages cached for offline peers and delivered when they reconnect
-- **✅ Privacy First**: No accounts, no phone numbers, no persistent identifiers
-- **✅ IRC-Style Commands**: Familiar `/join`, `/msg`, `/who` style interface
-- **✅ Message Retention**: Optional channel-wide message saving controlled by channel owners
-- **✅ Emergency Wipe**: Triple-tap logo to instantly clear all data
-- **✅ Modern Android UI**: Jetpack Compose with Material Design 3
-- **✅ Dark/Light Themes**: Terminal-inspired aesthetic matching iOS version
-- **✅ Battery Optimization**: Adaptive scanning and power management
+Inherited from bitchat and fully working:
 
-## Android Setup
+- Decentralized BLE mesh with automatic peer discovery and multi-hop relay
+- End-to-end encryption (X25519 key exchange, AES-256-GCM, Noise protocol)
+- Named channels with optional password protection
+- Geohash location channels over Nostr relays
+- Store and forward for offline peers
+- Voice notes, images and file transfer
+- Tor / Arti routing
+- No accounts, no phone numbers, no persistent identifiers
+- Emergency wipe (triple tap) to clear all data
+- IRC-style commands (`/join`, `/msg`, `/who`, `/block`, ...)
 
-### Prerequisites
+Added or changed in OChat:
 
-- **Android Studio**: Arctic Fox (2020.3.1) or newer
-- **Android SDK**: API level 26 (Android 8.0) or higher
-- **Kotlin**: 1.8.0 or newer
-- **Gradle**: 7.0 or newer
+- Conversation list home screen with three tabs
+- Full-screen chats with message bubbles and drawn delivery ticks
+- Amber dark theme plus a matching light theme
+- Sans-serif typography (monospace retained for fingerprints, geohashes and debug output)
+- No emoji anywhere in the interface; vector icons instead
+- First-run welcome dialog
 
-### Build Instructions
+## Install
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/permissionlesstech/bitchat-android.git
-   cd bitchat-android
-   ```
+Download an APK from the [Releases page](https://github.com/otzua/O-CHAT/releases) and open
+it on your device. You may need to allow installation from unknown sources under
+**Settings → Security** or **Settings → Apps → Special app access**.
 
-2. **Open in Android Studio:**
-   ```bash
-   # Open Android Studio and select "Open an Existing Project"
-   # Navigate to the bitchat-android directory
-   ```
+Pick `ochat-arm64.apk` for essentially any modern phone. Use `ochat-universal.apk` if you
+are unsure.
 
-3. **Build the project:**
-   ```bash
-   ./gradlew build
-   ```
+OChat installs alongside bitchat rather than replacing it — the two use different
+application IDs, so you can run both and message between them.
 
-4. **Install on device:**
-   ```bash
-   ./gradlew installDebug
-   ```
+## Building
 
-### Development Build
+### Requirements
 
-For development builds with debugging enabled:
+- Android Studio Ladybug or newer
+- Android SDK, compile target API 36, minimum API 26 (Android 8.0)
+- **JDK 17 or 21**
+
+> [!IMPORTANT]
+> Gradle 8.13 cannot run on JDK 24. If `./gradlew` fails with
+> `Could not create task ':outgoingVariants'` or `Type T not present`, you are on too new a
+> JDK. Android Studio ships a compatible runtime you can point at:
+>
+> ```bash
+> export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"   # macOS
+> ```
+
+### Build
 
 ```bash
+git clone https://github.com/otzua/O-CHAT.git
+cd O-CHAT
 ./gradlew assembleDebug
-adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-### Release Build
-
-For production releases:
+APKs land in `app/build/outputs/apk/debug/`.
 
 ```bash
-./gradlew assembleRelease
+./gradlew installDebug     # install to a connected device
+./gradlew testDebugUnitTest # run unit tests
+./gradlew assembleRelease   # unsigned release build
 ```
 
-## Android-Specific Requirements
+`local.properties` is generated on first build in Android Studio. Building from the command
+line on a fresh clone may require creating it:
 
-### Permissions
+```
+sdk.dir=/Users/you/Library/Android/sdk
+```
 
-The app requires the following permissions (automatically requested):
+## Permissions
 
-- **Bluetooth**: Core BLE functionality
-- **Location**: Required for BLE scanning on Android
-- **Network**: Expand your mesh through public internet relays
-- **Notifications**: Message alerts and background updates
+| Permission | Reason |
+|---|---|
+| Bluetooth (scan, advertise, connect) | Core mesh networking |
+| Location | Required by Android for BLE scanning; also used by geohash channels |
+| Notifications | Message alerts |
+| Microphone | Voice notes |
+| Camera / photos | Sending images |
+| Network | Geohash channels and Nostr relays |
 
-### Hardware Requirements
-
-- **Bluetooth LE (BLE)**: Required for mesh networking
-- **Android 8.0+**: API level 26 minimum
-- **RAM**: 2GB recommended for optimal performance
+OChat does not track your location. Location permission is an Android requirement for
+Bluetooth scanning.
 
 ## Usage
 
-### Basic Commands
+Tap a row in **Chats** to open a conversation, **Channels** for group and location chats, or
+**People** to start a new private chat with someone nearby.
 
-- `/j #channel` - Join or create a channel
-- `/m @name message` - Send a private message
-- `/w` - List online users
-- `/channels` - Show all discovered channels
-- `/block @name` - Block a peer from messaging you
-- `/block` - List all blocked peers
-- `/unblock @name` - Unblock a peer
-- `/clear` - Clear chat messages
-- `/pass [password]` - Set/change channel password (owner only)
-- `/transfer @name` - Transfer channel ownership
-- `/save` - Toggle message retention for channel (owner only)
+Slash commands still work if you prefer them:
 
-### Getting Started
+| Command | Effect |
+|---|---|
+| `/j #channel` | Join or create a channel |
+| `/m @name message` | Send a private message |
+| `/w` | List who is online |
+| `/block @name` | Block a user |
+| `/clear` | Clear the current chat |
 
-1. **Install the app** on your Android device (requires Android 8.0+)
-2. **Grant permissions** for Bluetooth and location when prompted
-3. **Launch bitchat** - it will auto-start mesh networking
-4. **Set your nickname** or use the auto-generated one
-5. **Connect automatically** to nearby iOS and Android bitchat users
-6. **Join a channel** with `/j #general` or start chatting in public
-7. **Messages relay** through the mesh network to reach distant peers
+## Project layout
 
-### Android UI Features
+| Path | Purpose |
+|---|---|
+| `ui/home/` | The OChat interface: navigation, tabs, conversation list, bubbles, credits |
+| `ui/` | Screens and components inherited from bitchat |
+| `ui/theme/` | Palette, typography, theme |
+| `mesh/` | Peer discovery, routing, BLE transport |
+| `protocol/` | Wire format |
+| `crypto/`, `noise/`, `identity/` | Encryption and key management |
+| `nostr/`, `geohash/` | Relay integration and location channels |
 
-- **Jetpack Compose UI**: Modern Material Design 3 interface
-- **Dark/Light Themes**: Terminal-inspired aesthetic matching iOS
-- **Haptic Feedback**: Vibrations for interactions and notifications
-- **Adaptive Layout**: Optimized for various Android screen sizes
-- **Message Status**: Real-time delivery and read receipts
-- **RSSI Indicators**: Signal strength colors for each peer
-
-### Channel Features
-
-- **Password Protection**: Channel owners can set passwords with `/pass`
-- **Message Retention**: Owners can enable mandatory message saving with `/save`
-- **@ Mentions**: Use `@nickname` to mention users (with autocomplete)
-- **Ownership Transfer**: Pass control to trusted users with `/transfer`
-
-## Security & Privacy
-
-### Encryption
-- **Private Messages**: X25519 key exchange + AES-256-GCM encryption
-- **Channel Messages**: Argon2id password derivation + AES-256-GCM
-- **Digital Signatures**: Ed25519 for message authenticity
-- **Forward Secrecy**: New key pairs generated each session
-
-### Privacy Features
-- **No Registration**: No accounts, emails, or phone numbers required
-- **Ephemeral by Default**: Messages exist only in device memory
-- **Cover Traffic**: Random delays and dummy messages prevent traffic analysis
-- **Emergency Wipe**: Triple-tap logo to instantly clear all data
-- **Bundled Tor Support**: Built-in Tor network integration for enhanced privacy when internet connectivity is available
-
-## Performance & Efficiency
-
-### Message Compression
-- **LZ4 Compression**: Automatic compression for messages >100 bytes
-- **30-70% bandwidth savings** on typical text messages
-- **Smart compression**: Skips already-compressed data
-
-### Battery Optimization
-- **Adaptive Power Modes**: Automatically adjusts based on battery level
-  - Performance mode: Full features when charging or >60% battery
-  - Balanced mode: Default operation (30-60% battery)
-  - Power saver: Reduced scanning when <30% battery
-  - Ultra-low power: Emergency mode when <10% battery
-- **Background efficiency**: Automatic power saving when app backgrounded
-- **Configurable scanning**: Duty cycle adapts to battery state
-
-### Network Efficiency
-- **Optimized Bloom filters**: Faster duplicate detection with less memory
-- **Message aggregation**: Batches small messages to reduce transmissions
-- **Adaptive connection limits**: Adjusts peer connections based on power mode
-
-## Technical Architecture
-
-### Binary Protocol
-bitchat uses an efficient binary protocol optimized for Bluetooth LE:
-- Compact packet format with 1-byte type field
-- TTL-based message routing (max 7 hops)
-- Automatic fragmentation for large messages
-- Message deduplication via unique IDs
-
-### Mesh Networking
-- Each device acts as both client and peripheral
-- Automatic peer discovery and connection management
-- Store-and-forward for offline message delivery
-- Adaptive duty cycling for battery optimization
-
-### Android-Specific Optimizations
-- **Coroutine Architecture**: Asynchronous operations for mesh networking
-- **Kotlin Coroutines**: Thread-safe concurrent mesh operations
-- **EncryptedSharedPreferences**: Secure storage for user settings
-- **Lifecycle-Aware**: Proper handling of Android app lifecycle
-- **Battery Optimization**: Foreground service and adaptive scanning
-
-## Android Technical Architecture
-
-### Core Components
-
-1. **BitchatApplication.kt**: Application-level initialization and dependency injection
-2. **MainActivity.kt**: Main activity handling permissions and UI hosting
-3. **ChatViewModel.kt**: MVVM pattern managing app state and business logic
-4. **BluetoothMeshService.kt**: Core BLE mesh networking (central + peripheral roles)
-5. **EncryptionService.kt**: Cryptographic operations using BouncyCastle
-6. **BinaryProtocol.kt**: Binary packet encoding/decoding matching iOS format
-7. **ChatScreen.kt**: Jetpack Compose UI with Material Design 3
-
-### Dependencies
-
-- **Jetpack Compose**: Modern declarative UI
-- **BouncyCastle**: Cryptographic operations (X25519, Ed25519, AES-GCM)
-- **Nordic BLE Library**: Reliable Bluetooth LE operations
-- **Kotlin Coroutines**: Asynchronous programming
-- **LZ4**: Message compression (when enabled)
-- **EncryptedSharedPreferences**: Secure local storage
-
-### Binary Protocol Compatibility
-
-The Android implementation maintains 100% binary protocol compatibility with iOS:
-- **Header Format**: Identical 13-byte header structure
-- **Packet Types**: Same message types and routing logic
-- **Encryption**: Identical cryptographic algorithms and key exchange
-- **UUIDs**: Same Bluetooth service and characteristic identifiers
-- **Fragmentation**: Compatible message fragmentation for large content
-
-## Publishing to Google Play
-
-### Preparation
-
-1. **Update version information:**
-   ```kotlin
-   // In app/build.gradle.kts
-   defaultConfig {
-       versionCode = 2  // Increment for each release
-       versionName = "1.1.0"  // User-visible version
-   }
-   ```
-
-2. **Create a signed release build:**
-   ```bash
-   ./gradlew assembleRelease
-   ```
-
-3. **Generate app bundle (recommended for Play Store):**
-   ```bash
-   ./gradlew bundleRelease
-   ```
-
-### Play Store Requirements
-
-- **Target API**: Latest Android API (currently 34)
-- **Privacy Policy**: Required for apps requesting sensitive permissions
-- **App Permissions**: Justify Bluetooth and location usage
-- **Content Rating**: Complete questionnaire for age-appropriate content
-
-### Distribution
-
-- **Google Play Store**: Main distribution channel
-- **F-Droid**: For open-source distribution
-- **Direct APK**: For testing and development
-
-## Cross-Platform Communication
-
-This Android port enables seamless communication with the original iOS bitchat app:
-
-- **iPhone ↔ Android**: Full bidirectional messaging
-- **Mixed Groups**: iOS and Android users in same channels
-- **Feature Parity**: All commands and encryption work across platforms
-- **Protocol Sync**: Identical message format and routing behavior
-
-**iOS Version**: For iPhone/iPad users, get the original bitchat at [github.com/jackjackbits/bitchat](https://github.com/jackjackbits/bitchat)
+See [docs/BRANDING.md](docs/BRANDING.md) for the palette, icon replacement instructions and
+the full list of values that must not be renamed.
 
 ## Contributing
 
-Contributions are welcome! Key areas for enhancement:
+Issues and pull requests are welcome. Two rules specific to this fork:
 
-1. **Performance**: Battery optimization and connection reliability
-2. **UI/UX**: Additional Material Design 3 features
-3. **Security**: Enhanced cryptographic features
-4. **Testing**: Unit and integration test coverage
-5. **Documentation**: API documentation and development guides
+1. **Do not touch the interop-critical values** listed in `docs/BRANDING.md`. Changing them
+   silently breaks compatibility with bitchat, and no test will catch it.
+2. **Keep UI work above the ViewModel line.** The interface is a projection over the flows
+   `ChatState` already exposes; it should not introduce a second source of truth for chat
+   data.
 
-## Support & Issues
+## Licence
 
-- **Bug Reports**: [Create an issue](../../issues) with device info and logs
-- **Feature Requests**: [Start a discussion](https://github.com/orgs/permissionlesstech/discussions)
-- **Security Issues**: Email security concerns privately
-- **iOS Compatibility**: Cross-reference with [original iOS repo](https://github.com/jackjackbits/bitchat)
+OChat is licensed under the **GNU General Public License v3.0**. See [LICENSE.md](LICENSE.md).
 
-For iOS-specific issues, please refer to the [original iOS bitchat repository](https://github.com/jackjackbits/bitchat).
+This is inherited, not chosen: upstream bitchat-android is GPL-3.0, and GPL-3.0 is a
+copyleft licence, so any derivative work must also be GPL-3.0 and must make its source
+available.
+
+> [!NOTE]
+> Upstream's README states the project is "released into the public domain", which
+> contradicts the GPL-3.0 text in its own LICENSE file and GitHub's own classification of
+> the repository. This fork follows the LICENSE file, which is the more conservative and
+> more defensible reading. If you intend to redistribute OChat commercially or under
+> different terms, get the licence position clarified with the upstream maintainers first.
+
+## Credits
+
+- **[bitchat](https://github.com/permissionlesstech/bitchat-android)** by permissionlesstech
+  — all of the mesh networking, protocol and cryptography, which is the hard part.
+- **[bitchat iOS](https://github.com/jackjackbits/bitchat)** — the original implementation
+  this protocol comes from.
+- Interface rework by Krish — [github.com/otzua](https://github.com/otzua).

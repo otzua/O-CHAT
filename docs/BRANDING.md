@@ -1,6 +1,7 @@
 # OChat branding and UI notes
 
-OChat is a fork of [bitchat](https://github.com/permissionlesstech/bitchat) (MIT). The
+OChat is a fork of [bitchat-android](https://github.com/permissionlesstech/bitchat-android),
+which is licensed under **GPL-3.0**. OChat is therefore also GPL-3.0. The
 networking, protocol, crypto and mesh layers are unchanged from upstream; the fork replaces
 the presentation layer and the app identity.
 
