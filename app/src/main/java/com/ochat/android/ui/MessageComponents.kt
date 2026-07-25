@@ -45,6 +45,12 @@ import com.ochat.android.ui.media.FileMessageItem
 import com.ochat.android.model.BitchatMessageType
 import com.ochat.android.R
 import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.layout.widthIn
+import com.ochat.android.ui.home.BubbleMeta
+import com.ochat.android.ui.home.DeliveryTicks
+import com.ochat.android.ui.home.SystemMessagePill
+import com.ochat.android.ui.home.bubbleShape
+import com.ochat.android.ui.theme.LocalOChatColors
 
 
 // VoiceNotePlayer moved to com.ochat.android.ui.media.VoiceNotePlayer
@@ -145,53 +151,86 @@ fun MessageItem(
     onImageClick: ((String, List<String>, Int) -> Unit)? = null
 ) {
     val colorScheme = MaterialTheme.colorScheme
+    val ochatColors = LocalOChatColors.current
     val timeFormatter = remember { SimpleDateFormat("HH:mm:ss", Locale.getDefault()) }
-    
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(0.dp)
+
+    // System notices are conversation events, not messages - they get a centered pill.
+    if (message.sender == "system") {
+        SystemMessagePill(
+            text = message.content,
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+        return
+    }
+
+    val isSelf = message.senderPeerID == meshService.myPeerID ||
+        message.sender == currentUserNickname ||
+        message.sender.startsWith("$currentUserNickname#")
+
+    // Media items bring their own internal layout; wrapping them in a padded text bubble
+    // would double up their chrome, so they sit in a bare aligned container instead.
+    val isMedia = message.type != BitchatMessageType.Message
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 1.dp),
+        horizontalArrangement = if (isSelf) Arrangement.End else Arrangement.Start
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.Top
-            ) {
-                // Provide a small end padding for own private messages so overlay doesn't cover text
-                val endPad = if (message.isPrivate && message.sender == currentUserNickname) 16.dp else 0.dp
-                // Create a custom layout that combines selectable text with clickable nickname areas
-                MessageTextWithClickableNicknames(
-                    message = message,
-                    messages = messages,
-                    currentUserNickname = currentUserNickname,
-                    meshService = meshService,
-                    colorScheme = colorScheme,
-                    timeFormatter = timeFormatter,
-                    onNicknameClick = onNicknameClick,
-                    onMessageLongPress = onMessageLongPress,
-                    onCancelTransfer = onCancelTransfer,
-                    onImageClick = onImageClick,
+        Column(
+            modifier = Modifier
+                .widthIn(max = 300.dp)
+                .clip(bubbleShape(isSelf))
+                .background(if (isSelf) ochatColors.bubbleSent else ochatColors.bubbleReceived)
+                .padding(
+                    start = if (isMedia) 4.dp else 10.dp,
+                    end = if (isMedia) 4.dp else 10.dp,
+                    top = if (isMedia) 4.dp else 6.dp,
+                    bottom = 4.dp
+                ),
+            horizontalAlignment = Alignment.Start
+        ) {
+            // Sender label, shown only for other people's messages in multi-party timelines.
+            if (!isSelf && !message.isPrivate) {
+                val (baseName, suffix) = splitSuffix(message.sender)
+                Text(
+                    text = truncateNickname(baseName) + suffix,
+                    color = getPeerColor(message, ochatColors.isDark),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(end = endPad)
+                        .padding(bottom = 2.dp)
+                        .clickable {
+                            onNicknameClick?.invoke(message.originalSender ?: message.sender)
+                        }
                 )
             }
 
-            // Delivery status for private messages (overlay, non-displacing)
-            if (message.isPrivate && message.sender == currentUserNickname) {
-                message.deliveryStatus?.let { status ->
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(top = 2.dp)
-                    ) {
-                        DeliveryStatusIcon(status = status)
-                    }
-                }
-            }
+            MessageTextWithClickableNicknames(
+                message = message,
+                messages = messages,
+                currentUserNickname = currentUserNickname,
+                meshService = meshService,
+                colorScheme = colorScheme,
+                timeFormatter = timeFormatter,
+                onNicknameClick = onNicknameClick,
+                onMessageLongPress = onMessageLongPress,
+                onCancelTransfer = onCancelTransfer,
+                onImageClick = onImageClick,
+                modifier = Modifier
+            )
+
+            BubbleMeta(
+                timestamp = message.timestamp,
+                isSelf = isSelf,
+                deliveryStatus = message.deliveryStatus,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(top = 2.dp)
+            )
         }
-        
-        // Link previews removed; links are now highlighted inline and clickable within the message text
     }
 }
 
@@ -365,20 +404,23 @@ fun MessageItem(
             modifier = modifier
         )
     } else {
-        // Normal message display
-        val annotatedText = formatMessageAsAnnotatedString(
+        // Normal message display. The bubble draws the sender label, timestamp and ticks,
+        // so only the body is formatted here.
+        val ochatColors = LocalOChatColors.current
+        val isSelfMessage = message.senderPeerID == meshService.myPeerID ||
+            message.sender == currentUserNickname ||
+            message.sender.startsWith("$currentUserNickname#")
+        val annotatedText = formatMessageContentAsAnnotatedString(
             message = message,
             currentUserNickname = currentUserNickname,
-            meshService = meshService,
-            colorScheme = colorScheme,
-            timeFormatter = timeFormatter
+            isSelf = isSelfMessage,
+            contentColor = ochatColors.bubbleTextPrimary,
+            isDark = ochatColors.isDark
         )
-        
-        // Check if this message was sent by self to avoid click interactions on own nickname
-        val isSelf = message.senderPeerID == meshService.myPeerID || 
-                     message.sender == currentUserNickname ||
-                     message.sender.startsWith("$currentUserNickname#")
-        
+
+        // Own nickname is not a tap target
+        val isSelf = isSelfMessage
+
         val haptic = LocalHapticFeedback.current
         val context = LocalContext.current
         var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
@@ -464,56 +506,14 @@ fun MessageItem(
     }
 }
 
+/**
+ * Delivery indicator.
+ *
+ * Now delegates to [DeliveryTicks], which draws the ticks as vector paths. The previous
+ * implementation rendered check characters from strings.xml; those string values are gone,
+ * so any remaining caller routes here to keep a single source of truth for the shapes.
+ */
 @Composable
 fun DeliveryStatusIcon(status: DeliveryStatus) {
-    val colorScheme = MaterialTheme.colorScheme
-    
-    when (status) {
-        is DeliveryStatus.Sending -> {
-            Text(
-                text = stringResource(R.string.status_sending),
-                fontSize = 10.sp,
-                color = colorScheme.primary.copy(alpha = 0.6f)
-            )
-        }
-        is DeliveryStatus.Sent -> {
-            // Use a subtle hollow marker for Sent; single check is reserved for Delivered (iOS parity)
-            Text(
-                text = stringResource(R.string.status_pending),
-                fontSize = 10.sp,
-                color = colorScheme.primary.copy(alpha = 0.6f)
-            )
-        }
-        is DeliveryStatus.Delivered -> {
-            // Single check for Delivered (matches iOS expectations)
-            Text(
-                text = stringResource(R.string.status_sent),
-                fontSize = 10.sp,
-                color = colorScheme.primary.copy(alpha = 0.8f)
-            )
-        }
-        is DeliveryStatus.Read -> {
-            Text(
-                text = stringResource(R.string.status_delivered),
-                fontSize = 10.sp,
-                color = Color(0xFF007AFF), // Blue
-                fontWeight = FontWeight.Bold
-            )
-        }
-        is DeliveryStatus.Failed -> {
-            Text(
-                text = stringResource(R.string.status_failed),
-                fontSize = 10.sp,
-                color = Color.Red.copy(alpha = 0.8f)
-            )
-        }
-        is DeliveryStatus.PartiallyDelivered -> {
-            // Show a single subdued check without numeric label
-            Text(
-                text = stringResource(R.string.status_sent),
-                fontSize = 10.sp,
-                color = colorScheme.primary.copy(alpha = 0.6f)
-            )
-        }
-    }
+    DeliveryTicks(status = status)
 }
