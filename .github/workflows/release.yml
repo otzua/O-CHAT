@@ -10,6 +10,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    # Declared at job level, not on the signing step. A step's own env block is not
+    # available to that step's `if` expression, so `if: env.SIGNING_KEY != ''` would
+    # always have seen an empty value and skipped signing - shipping unsigned APKs
+    # that Android refuses to install.
+    env:
+      SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -68,8 +75,6 @@ jobs:
       # APKs, which Android refuses to install - so treat a skipped run as a failed release.
       - name: Sign APKs
         if: ${{ env.SIGNING_KEY != '' }}
-        env:
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
         run: |
           set -euo pipefail
           echo "$SIGNING_KEY" | base64 --decode > "$RUNNER_TEMP/release.jks"

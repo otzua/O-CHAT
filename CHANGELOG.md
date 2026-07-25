@@ -7,6 +7,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Entries below `OChat 1.0.0` are inherited from upstream
 [bitchat-android](https://github.com/permissionlesstech/bitchat-android).
 
+## [OChat 1.0.1]
+
+### Fixed
+- **BLE scanning could stop permanently, preventing all peer discovery.** Leaving a
+  duty-cycled power mode cancelled the duty-cycle timer without re-enabling scanning, so
+  if the cycle was in its OFF phase the radio was left deaf with nothing left to wake it.
+  In POWER_SAVER the cycle is off 28 of every 30 seconds, so simply bringing the app to
+  the foreground had roughly a 93% chance of killing discovery until the process
+  restarted. A second fault made the "restart scanning on power mode change" check
+  compare a value against itself, so it never fired.
+
+  Verified on hardware: OChat and an unmodified bitchat client now discover each other
+  and exchange signed announces successfully.
+
+  Both faults are inherited from upstream bitchat and affect it identically. The fix
+  touches radio scheduling only, not the wire protocol.
+- Release signing in CI was gated on a step-level `env` value, which is not available to
+  that step's own `if` expression. The condition always saw an empty value, so signing
+  would have silently skipped and produced unsigned APKs that Android refuses to install.
+
+### Known hardware limitation
+- Some devices report BLE support but provide no BLE *advertiser* (peripheral mode); on
+  those, `getBluetoothLeAdvertiser()` returns null and the device can only ever scan, never
+  be discovered. Observed on a Samsung Galaxy M10s. Two such devices cannot find each other,
+  and at least one peer in range must be able to advertise. This is a hardware/firmware
+  limitation and cannot be fixed in software.
+
+---
+
 ## [OChat 1.0.0]
 First release of the OChat fork. The interface is rebuilt; the networking,
 protocol and cryptography are unchanged from upstream bitchat.

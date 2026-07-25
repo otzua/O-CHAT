@@ -50,6 +50,24 @@ defines them:
 Renaming the Android package (`com.bitchat.android` → `com.ochat.android`) has no effect on
 any of this — mesh identity lives in the BLE UUIDs, not the package name.
 
+## Device requirements for mesh
+
+Peer discovery needs at least one device in range that can **advertise** over BLE
+(peripheral mode). Some phones — typically older or budget models — report
+`android.hardware.bluetooth_le` support but return no advertiser, so they can only scan and
+can never be discovered themselves.
+
+If two such devices are put together, they will never find each other no matter how long you
+wait. Confirmed on a Samsung Galaxy M10s (Android 11), where the log shows:
+
+```
+W/BluetoothAdapter: getBluetoothLeAdvertiser() ble not available
+E/BluetoothGattServerManager: BLE advertiser not available
+```
+
+This is a hardware/firmware limitation and cannot be fixed in software. Such a device still
+works fine as long as the peer it is talking to can advertise.
+
 ## Features
 
 Inherited from bitchat and fully working:

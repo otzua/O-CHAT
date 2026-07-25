@@ -59,39 +59,35 @@ git push origin v1.0.0
 It produces `ochat-arm64.apk`, `ochat-x86_64.apk` and `ochat-universal.apk`, and creates a
 GitHub Release with a populated body.
 
-### The APKs are unsigned
+### Signing (already configured)
 
-The signing step in the workflow is commented out. Unsigned APKs install with a warning and
-**cannot be updated in place** by a later signed build — users would have to uninstall
-first. Before your first real release, generate a keystore:
+CI signs every release APK automatically. The keystore lives at
+`~/ochat-signing/ochat-release.jks` and these repository secrets are already set:
+`SIGNING_KEY`, `ALIAS`, `KEY_STORE_PASSWORD`, `KEY_PASSWORD`.
 
-```bash
-keytool -genkey -v -keystore ochat-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias ochat
+Certificate SHA-256 fingerprint:
+
+```
+87:E2:6E:CC:64:F3:19:DB:6C:FB:03:48:30:02:4F:00:04:6C:63:BB:E1:53:84:52:88:4F:96:3F:80:55:C8:8F
 ```
 
-Then add these repository secrets (**Settings → Secrets and variables → Actions**):
-
-| Secret | Value |
-|---|---|
-| `SIGNING_KEY` | `base64 -i ochat-release.jks` output |
-| `ALIAS` | `ochat` |
-| `KEY_STORE_PASSWORD` | keystore password |
-| `KEY_PASSWORD` | key password |
-
-and uncomment the "Sign APKs" step in `release.yml`.
+The workflow zipaligns, signs with v1+v2+v3 schemes, and runs `apksigner verify` before
+upload, so a signing failure fails the build rather than publishing a broken artifact.
 
 > [!WARNING]
 > Keep `ochat-release.jks` and its passwords backed up somewhere safe and **never commit
 > them**. Losing the keystore means you can never ship an update to anyone who installed a
 > build signed with it.
 
-## 5. Before making the repo public
+## 5. Remaining tasks
 
 - [ ] Replace the placeholder launcher icon — see [BRANDING.md](BRANDING.md)
-- [ ] Test the APK on a real device; nothing in this fork has been run yet, only compiled
-- [ ] Verify messaging against a real bitchat client, which is the whole compatibility claim
-- [ ] Decide whether to keep the security warning in the README (recommended: yes)
-- [ ] Confirm you are comfortable with GPL-3.0 obligations
+- [x] Test on a real device
+- [x] Verify messaging against a real bitchat client — done, both directions, with each
+      side validating the other's signed announce
+- [ ] Back up `~/ochat-signing/ochat-release.jks` and its password off-machine. Losing it
+      means never being able to ship an update to anyone who installed a signed build.
+- [ ] Delete `~/ochat-signing/.pw` once the password is in a password manager
 
 ## What has not been done
 
@@ -99,4 +95,7 @@ and uncomment the "Sign APKs" step in `release.yml`.
   emoji. Only `values/strings.xml` was rebranded.
 - The legacy raster launcher icons in `mipmap-*dpi/ic_launcher.png` still contain the
   original bitchat artwork.
-- No release has been built or tested; only `assembleDebug` has been verified locally.
+- Only the debug build has been exercised on hardware. The release build additionally runs
+  R8/minification, which has not been tested.
+- Media (images, voice notes, files) and private chats have not been tested against a real
+  bitchat client — only the public mesh timeline.
