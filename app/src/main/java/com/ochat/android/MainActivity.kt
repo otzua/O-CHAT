@@ -37,7 +37,7 @@ import com.ochat.android.onboarding.OnboardingCoordinator
 import com.ochat.android.onboarding.OnboardingState
 import com.ochat.android.onboarding.PermissionExplanationScreen
 import com.ochat.android.onboarding.PermissionManager
-import com.ochat.android.ui.ChatScreen
+import com.ochat.android.ui.home.OChatApp
 import com.ochat.android.ui.ChatViewModel
 import com.ochat.android.ui.OrientationAwareActivity
 import com.ochat.android.ui.theme.OChatTheme
@@ -327,7 +327,7 @@ class MainActivity : OrientationAwareActivity() {
 
                 // Add the callback - this will be automatically removed when the activity is destroyed
                 onBackPressedDispatcher.addCallback(this, backCallback)
-                ChatScreen(viewModel = chatViewModel)
+                OChatApp(viewModel = chatViewModel)
             }
             
             OnboardingState.ERROR -> {
