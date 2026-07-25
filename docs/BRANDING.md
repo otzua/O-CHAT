@@ -7,8 +7,9 @@ the presentation layer and the app identity.
 
 ## Supplying your own launcher icon
 
-Three vector layers make up the adaptive icon. All three currently hold an amber "O"
-placeholder and are meant to be replaced:
+Three vector layers make up the adaptive icon. The current mark is an amber "O" whose
+lower-left tail turns it into a speech bubble. Replace all three together if you want
+different artwork:
 
 | File | Layer | Notes |
 |------|-------|-------|

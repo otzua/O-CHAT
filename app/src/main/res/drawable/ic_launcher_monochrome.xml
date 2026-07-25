@@ -3,16 +3,22 @@
   OChat themed-icon layer (Android 13+). The system recolours this to match the user's
   wallpaper, so it must be a solid single-colour silhouette - no brand colours here.
 
-  PLACEHOLDER - replace alongside the other two launcher layers. See docs/BRANDING.md.
+  Geometry is identical to ic_launcher_foreground.xml so the themed icon matches the
+  standard one. See docs/BRANDING.md.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,62 L29,80 L47,70 Z" />
+
     <path
         android:strokeColor="#FFFFFF"
         android:strokeWidth="9"
         android:fillColor="#00000000"
-        android:pathData="M54,32 a22,22 0 1,0 0.1,0 z" />
+        android:pathData="M54,27 a23,23 0 1,0 0.1,0 z" />
 </vector>

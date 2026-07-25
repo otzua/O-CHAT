@@ -1,18 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  OChat launcher foreground: an amber "O" ring.
+  OChat launcher foreground: an amber "O" that doubles as a speech bubble.
 
-  PLACEHOLDER - replace with your own artwork. Keep the mark inside the centre 72x72 of
-  the 108x108 viewport so launcher masks never clip it. See docs/BRANDING.md.
+  The ring is the letter O; the tail at the lower left turns it into a chat bubble.
+  Both sit inside the centre 72x72 safe zone of the 108x108 viewport, so launcher
+  masks (circle, squircle, rounded square) never clip them.
+
+  To use different artwork, replace this file along with ic_launcher_background.xml
+  and ic_launcher_monochrome.xml. See docs/BRANDING.md.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- Speech-bubble tail, drawn first so the ring stroke laps over the join -->
+    <path
+        android:fillColor="#FFA726"
+        android:pathData="M34,62 L29,80 L47,70 Z" />
+
+    <!-- The O -->
     <path
         android:strokeColor="#FFA726"
         android:strokeWidth="9"
         android:fillColor="#00000000"
-        android:pathData="M54,32 a22,22 0 1,0 0.1,0 z" />
+        android:pathData="M54,27 a23,23 0 1,0 0.1,0 z" />
 </vector>
