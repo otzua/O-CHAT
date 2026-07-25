@@ -329,6 +329,36 @@ fun splitSuffix(name: String): Pair<String, String> {
 }
 
 /**
+ * Message body only - no sender prefix and no trailing timestamp.
+ *
+ * Bubble layouts render the sender, timestamp and delivery ticks as their own composables,
+ * so they need just the content. Mention, hashtag, geohash and URL annotations are produced
+ * by the same routine the classic single-line renderer uses, which keeps every tap target
+ * ("nickname_click", "geohash_click", "url_click") behaving identically in both layouts.
+ */
+fun formatMessageContentAsAnnotatedString(
+    message: BitchatMessage,
+    currentUserNickname: String,
+    isSelf: Boolean,
+    contentColor: Color,
+    isDark: Boolean
+): AnnotatedString {
+    val builder = AnnotatedString.Builder()
+    builder.pushStyle(SpanStyle(color = contentColor, fontSize = BASE_FONT_SIZE.sp))
+    appendIOSFormattedContent(
+        builder = builder,
+        content = message.content,
+        mentions = message.mentions,
+        currentUserNickname = currentUserNickname,
+        baseColor = contentColor,
+        isSelf = isSelf,
+        isDark = isDark
+    )
+    builder.pop()
+    return builder.toAnnotatedString()
+}
+
+/**
  * iOS-style content formatting with proper hashtag and mention handling
  */
 private fun appendIOSFormattedContent(
