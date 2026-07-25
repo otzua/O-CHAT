@@ -7,6 +7,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Entries below `OChat 1.0.0` are inherited from upstream
 [bitchat-android](https://github.com/permissionlesstech/bitchat-android).
 
+## [OChat 1.2.0]
+
+### Added
+- **Profile screen**, reached from your avatar in the home top bar or the overflow menu.
+  Shows your avatar, nickname and how many people you are connected to.
+- Theme selection (System / Light / Dark) moved somewhere findable; it previously only
+  existed inside the About sheet.
+- Peer ID, key fingerprint and Nostr key are now visible and copyable, in monospace, each
+  with a line explaining what it is for.
+
+### Fixed
+- **Nickname editing was unreachable.** `NicknameEditor` was only ever wired into the old
+  chat header, which became dead code when the interface was rebuilt, so there was no way
+  to change your nickname at all.
+- **The emergency data wipe was unreachable** for the same reason. It previously lived
+  behind an undocumented triple-tap on the header. It now has a real entry point and a
+  confirmation dialog that states plainly that the identity cannot be recovered.
+- Changing your nickname no longer re-announces to the mesh on every keystroke. The old
+  header called `setNickname` from `onValueChange`, and that call persists *and* broadcasts
+  an announce, so typing a ten-character name sent ten announcements. It is now committed
+  on Done or via the tick.
+- The profile screen remembered the fingerprint and Nostr key without a key. Clearing all
+  data recreates the identity in place without leaving the screen, so both would have kept
+  displaying the pre-wipe values - dangerous, because a fingerprint is what you read out to
+  verify yourself to someone in person.
+
+### Not verified
+As with 1.1.0, these interface changes have been compiled and reviewed but **not run on a
+device**.
+
+---
+
 ## [OChat 1.1.0]
 
 ### Added
