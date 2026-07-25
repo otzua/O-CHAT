@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -16,30 +17,41 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 
-// Colors that match the iOS bitchat theme
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF39FF14),        // Bright green (terminal-like)
-    onPrimary = Color.Black,
-    secondary = Color(0xFF2ECB10),      // Darker green
-    onSecondary = Color.Black,
-    background = Color.Black,
-    onBackground = Color(0xFF39FF14),   // Green on black
-    surface = Color(0xFF111111),        // Very dark gray
-    onSurface = Color(0xFF39FF14),      // Green text
-    error = Color(0xFFFF5555),          // Red for errors
-    onError = Color.Black
+    primary = AmberAccent,
+    onPrimary = Color(0xFF1B1207),
+    primaryContainer = DarkBubbleSent,
+    onPrimaryContainer = DarkTextPrimary,
+    secondary = AmberAccentPressed,
+    onSecondary = Color(0xFF1B1207),
+    background = DarkBackground,
+    onBackground = DarkTextPrimary,
+    surface = DarkSurface,
+    onSurface = DarkTextPrimary,
+    surfaceVariant = DarkSurfaceHigh,
+    onSurfaceVariant = DarkTextMuted,
+    outline = DarkDivider,
+    outlineVariant = DarkDivider,
+    error = ErrorRed,
+    onError = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF008000),        // Dark green
+    primary = AmberAccentLight,
     onPrimary = Color.White,
-    secondary = Color(0xFF006600),      // Even darker green
+    primaryContainer = LightBubbleSent,
+    onPrimaryContainer = LightTextPrimary,
+    secondary = AmberAccentLight,
     onSecondary = Color.White,
-    background = Color.White,
-    onBackground = Color(0xFF008000),   // Dark green on white
-    surface = Color(0xFFF8F8F8),        // Very light gray
-    onSurface = Color(0xFF008000),      // Dark green text
-    error = Color(0xFFCC0000),          // Dark red for errors
+    background = LightBackground,
+    onBackground = LightTextPrimary,
+    surface = LightSurface,
+    onSurface = LightTextPrimary,
+    surfaceVariant = LightSurfaceHigh,
+    onSurfaceVariant = LightTextMuted,
+    outline = LightDivider,
+    outlineVariant = LightDivider,
+    error = ErrorRed,
     onError = Color.White
 )
 
@@ -61,6 +73,7 @@ fun OChatTheme(
     }
 
     val colorScheme = if (shouldUseDark) DarkColorScheme else LightColorScheme
+    val ochatColors = if (shouldUseDark) DarkOChatColors else LightOChatColors
 
     val view = LocalView.current
     SideEffect {
@@ -76,6 +89,7 @@ fun OChatTheme(
                     View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
                 } else 0
             }
+            @Suppress("DEPRECATION")
             window.navigationBarColor = colorScheme.background.toArgb()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 window.isNavigationBarContrastEnforced = false
@@ -83,9 +97,11 @@ fun OChatTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalOChatColors provides ochatColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
