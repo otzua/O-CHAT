@@ -291,7 +291,14 @@ class PowerManager(private val context: Context) : LifecycleEventObserver {
             if (shouldUseDutyCycle()) {
                 startDutyCycle()
             } else {
+                // Performance mode: no duty cycling, scan continuously.
+                //
+                // stopDutyCycle() only cancels the timer. If the cycle happened to be in its
+                // OFF phase - 28 of every 30 seconds in POWER_SAVER, so almost always - the
+                // scanner was left off and the timer that would have switched it back on is
+                // now cancelled, so scanning never resumes. Enable it explicitly.
                 stopDutyCycle()
+                delegate?.onScanStateChanged(true)
             }
         }
     }
