@@ -1,5 +1,6 @@
 package com.ochat.android.ui.home
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,6 +57,19 @@ fun OChatApp(viewModel: ChatViewModel) {
         privateChatSheetPeer?.let { peerID ->
             navController.navigate("conversation/${ConversationId.Private(peerID).encode()}")
             viewModel.hidePrivateChatSheet()
+        }
+    }
+
+    // Overlays live outside the nav graph, so back has to dismiss them explicitly. This
+    // takes priority over the NavHost's own handler while any overlay is showing.
+    BackHandler(enabled = showAppInfo || showPasswordPrompt || userSheetTarget != null) {
+        when {
+            userSheetTarget != null -> {
+                userSheetTarget = null
+                userSheetMessage = null
+            }
+            showAppInfo -> viewModel.hideAppInfo()
+            showPasswordPrompt -> viewModel.handleBackPressed()
         }
     }
 
