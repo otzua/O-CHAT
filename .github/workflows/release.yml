@@ -62,15 +62,32 @@ jobs:
           ls -all
           tree || ls -R
 
-      # Optional: Sign APKs (uncomment and configure secrets when ready)
-      # - name: Sign APKs
-      #   uses: r0adkll/sign-android-release@v1
-      #   with:
-      #     releaseDirectory: app/build/outputs/apk/release
-      #     signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-      #     alias: ${{ secrets.ALIAS }}
-      #     keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-      #     keyPassword: ${{ secrets.KEY_PASSWORD }}
+      # Signs every release APK in place. Requires four repository secrets:
+      # SIGNING_KEY (base64 of the keystore), ALIAS, KEY_STORE_PASSWORD, KEY_PASSWORD.
+      # If SIGNING_KEY is absent the step is skipped and the build produces UNSIGNED
+      # APKs, which Android refuses to install - so treat a skipped run as a failed release.
+      - name: Sign APKs
+        if: ${{ env.SIGNING_KEY != '' }}
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          echo "$SIGNING_KEY" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          BT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          cd app/build/outputs/apk/release
+          for apk in ochat-*.apk; do
+            "$BT/zipalign" -p -f 4 "$apk" "aligned-$apk"
+            "$BT/apksigner" sign \
+              --ks "$RUNNER_TEMP/release.jks" \
+              --ks-key-alias "${{ secrets.ALIAS }}" \
+              --ks-pass "pass:${{ secrets.KEY_STORE_PASSWORD }}" \
+              --key-pass "pass:${{ secrets.KEY_PASSWORD }}" \
+              --out "$apk" "aligned-$apk"
+            rm -f "aligned-$apk"
+            "$BT/apksigner" verify "$apk"
+            echo "signed and verified: $apk"
+          done
+          rm -f "$RUNNER_TEMP/release.jks"
 
       - name: Upload APKs as artifacts
         uses: actions/upload-artifact@v4
