@@ -453,4 +453,16 @@
   </plurals>
 
     <string name="bluetooth_recommended">Bluetooth Recommended</string>
+
+  <!-- Credits / first-run welcome -->
+  <string name="credit_author">Made by Krish</string>
+  <string name="credit_tagline">OChat is bitchat, rebuilt to feel like WhatsApp.</string>
+  <string name="credit_github_label">github.com/otzua</string>
+  <string name="credit_github_url">https://github.com/otzua</string>
+  <string name="credit_upstream">Forked from bitchat, licensed under MIT.</string>
+  <string name="credit_footer_short">Made by Krish · github.com/otzua</string>
+  <string name="welcome_title">Welcome to OChat</string>
+  <string name="welcome_body">This is bitchat, rebuilt to feel like WhatsApp.\n\nMessages travel over Bluetooth mesh, so it works with no internet and no servers. You can still chat with anyone running bitchat.</string>
+  <string name="welcome_dismiss">Get started</string>
+  <string name="cd_open_github">Open GitHub profile</string>
 </resources>
