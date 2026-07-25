@@ -1,6 +1,11 @@
 package com.ochat.android.ui.home
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -92,7 +97,18 @@ fun OChatApp(viewModel: ChatViewModel) {
         }
         composable(
             route = ROUTE_CONVERSATION,
-            arguments = listOf(navArgument(ARG_CONVERSATION) { type = NavType.StringType })
+            arguments = listOf(navArgument(ARG_CONVERSATION) { type = NavType.StringType }),
+            // Forward/back motion, so opening a chat reads as going deeper rather than a
+            // cut. Only the incoming screen translates; the list underneath just fades,
+            // which keeps the work to one animated layer.
+            enterTransition = {
+                slideInHorizontally(tween(ANIM_SLOW)) { it / 4 } + fadeIn(tween(ANIM_MEDIUM))
+            },
+            exitTransition = { fadeOut(tween(ANIM_FAST)) },
+            popEnterTransition = { fadeIn(tween(ANIM_FAST)) },
+            popExitTransition = {
+                slideOutHorizontally(tween(ANIM_SLOW)) { it / 4 } + fadeOut(tween(ANIM_MEDIUM))
+            }
         ) { entry ->
             val raw = entry.arguments?.getString(ARG_CONVERSATION).orEmpty()
             val conversationId = remember(raw) { ConversationId.decode(raw) }

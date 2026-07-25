@@ -1,6 +1,18 @@
 package com.ochat.android.ui.home
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.Surface
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -80,9 +92,11 @@ fun ConversationScreen(
 
     var messageText by remember { mutableStateOf(TextFieldValue("")) }
     var forceScrollToBottom by remember { mutableStateOf(false) }
+    var isScrolledUp by remember { mutableStateOf(false) }
     var showImageViewer by remember { mutableStateOf(false) }
     var viewerPaths by remember { mutableStateOf(emptyList<String>()) }
     var viewerIndex by remember { mutableStateOf(0) }
+    val haptics = LocalHapticFeedback.current
 
     // Bind the ViewModel's active-conversation context to this screen's lifetime, and release
     // it on exit so background messages are not misrouted into a closed chat.
@@ -191,11 +205,15 @@ fun ConversationScreen(
             )
         }
     ) { padding ->
+      Box(
+          modifier = Modifier
+              .fillMaxSize()
+              .padding(padding)
+              .background(colors.chatWallpaper)
+      ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .background(colors.chatWallpaper)
                 .windowInsetsPadding(WindowInsets.ime)
                 .windowInsetsPadding(WindowInsets.navigationBars)
         ) {
@@ -205,6 +223,7 @@ fun ConversationScreen(
                 meshService = viewModel.meshServiceFacade,
                 modifier = Modifier.weight(1f),
                 forceScrollToBottom = forceScrollToBottom,
+                onScrolledUpChanged = { isScrolledUp = it },
                 onNicknameClick = { fullSenderName ->
                     val (baseName, hashSuffix) = splitSuffix(fullSenderName)
                     val mention = if (conversationId is ConversationId.Geohash && hashSuffix.isNotEmpty()) {
@@ -243,6 +262,9 @@ fun ConversationScreen(
                 },
                 onSend = {
                     if (messageText.text.trim().isNotEmpty()) {
+                        // Confirm the send physically. On a mesh network delivery is not
+                        // instant, so the tap itself needs to feel acknowledged.
+                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         viewModel.sendMessage(messageText.text.trim())
                         messageText = TextFieldValue("")
                         forceScrollToBottom = !forceScrollToBottom
@@ -270,6 +292,34 @@ fun ConversationScreen(
                 showMediaButtons = showMediaButtons
             )
         }
+
+        // Jump-to-latest, shown only once you have scrolled away from the newest message.
+        // Sits above the input bar and rides the keyboard so it never covers the composer.
+        AnimatedVisibility(
+            visible = isScrolledUp,
+            enter = fadeIn(tween(ANIM_FAST)) + scaleIn(tween(ANIM_FAST), initialScale = 0.8f),
+            exit = fadeOut(tween(ANIM_FAST)) + scaleOut(tween(ANIM_FAST), targetScale = 0.8f),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .windowInsetsPadding(WindowInsets.ime)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(end = 16.dp, bottom = 76.dp)
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = colors.surfaceHigh,
+                shadowElevation = 4.dp,
+                onClick = { forceScrollToBottom = !forceScrollToBottom }
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.KeyboardArrowDown,
+                    contentDescription = "Jump to latest message",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(8.dp).size(22.dp)
+                )
+            }
+        }
+      }
     }
 
     if (showImageViewer) {

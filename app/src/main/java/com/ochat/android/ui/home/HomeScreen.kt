@@ -1,6 +1,25 @@
 package com.ochat.android.ui.home
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.TabPosition
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.unit.lerp
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -54,6 +73,39 @@ import com.ochat.android.ui.theme.LocalOChatColors
 private const val TAB_CHATS = 0
 private const val TAB_CHANNELS = 1
 private const val TAB_PEOPLE = 2
+private const val TAB_COUNT = 3
+private val TAB_LABELS = listOf("CHATS", "CHANNELS", "PEOPLE")
+
+/**
+ * Tab underline that tracks the pager offset continuously instead of snapping when the
+ * swipe settles, so the indicator stays under your finger mid-drag.
+ */
+@Composable
+private fun PagerTabIndicator(
+    tabPositions: List<TabPosition>,
+    pagerState: PagerState
+) {
+    val index = pagerState.currentPage.coerceIn(0, tabPositions.lastIndex)
+    val fraction = pagerState.currentPageOffsetFraction
+    val current = tabPositions[index]
+    val target = tabPositions[(index + if (fraction >= 0) 1 else -1).coerceIn(0, tabPositions.lastIndex)]
+    val t = kotlin.math.abs(fraction)
+
+    val left = lerp(current.left, target.left, t)
+    val width = lerp(current.width, target.width, t)
+
+    Box(
+        Modifier
+            .wrapContentSize(Alignment.BottomStart)
+            .offset(x = left)
+            .width(width)
+            .height(3.dp)
+            .background(
+                MaterialTheme.colorScheme.primary,
+                RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)
+            )
+    )
+}
 
 /**
  * OChat home: a WhatsApp-shaped shell over BitChat's existing state.
@@ -70,8 +122,27 @@ fun HomeScreen(
     onShowAppInfo: () -> Unit
 ) {
     val colors = LocalOChatColors.current
-    var selectedTab by remember { mutableIntStateOf(TAB_CHATS) }
     var menuExpanded by remember { mutableStateOf(false) }
+
+    val pagerState = rememberPagerState(initialPage = TAB_CHATS) { TAB_COUNT }
+    val scope = rememberCoroutineScope()
+
+    // settledPage lags the swipe until it snaps, so the tab row and FAB do not flicker
+    // between states while a drag is in progress.
+    val settledPage = pagerState.currentPage
+
+    // Unread counts, surfaced on the tab labels so activity in a tab you are not looking
+    // at is still visible. Derived so the top bar only recomposes when a count changes.
+    val unreadPrivate by viewModel.unreadPrivateMessages.collectAsStateWithLifecycle()
+    val unreadChannels by viewModel.unreadChannelMessages.collectAsStateWithLifecycle()
+    val connectedPeers by viewModel.connectedPeers.collectAsStateWithLifecycle()
+    val myPeerID = viewModel.myPeerID
+
+    val chatsBadge = unreadPrivate.size
+    val channelsBadge = remember(unreadChannels) { unreadChannels.values.sum() }
+    val peopleCount = remember(connectedPeers, myPeerID) {
+        connectedPeers.count { it != myPeerID }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -79,12 +150,31 @@ fun HomeScreen(
             Column {
                 TopAppBar(
                     title = {
-                        Text(
-                            text = "OChat",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Column {
+                            Text(
+                                text = "OChat",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            // Live mesh status. Crossfaded rather than swapped so the label
+                            // does not pop as peers come and go.
+                            Crossfade(
+                                targetState = peopleCount,
+                                animationSpec = tween(ANIM_MEDIUM),
+                                label = "meshStatus"
+                            ) { count ->
+                                Text(
+                                    text = when (count) {
+                                        0 -> "searching for people nearby"
+                                        1 -> "1 person nearby"
+                                        else -> "$count people nearby"
+                                    },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (count > 0) colors.textMuted else colors.textMuted.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
                     },
                     actions = {
                         Box {
@@ -123,20 +213,46 @@ fun HomeScreen(
                     )
                 )
                 TabRow(
-                    selectedTabIndex = selectedTab,
+                    selectedTabIndex = settledPage,
                     containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.primary
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    indicator = { tabPositions ->
+                        // Indicator follows the drag continuously rather than jumping on
+                        // settle, so the underline tracks your finger.
+                        if (settledPage < tabPositions.size) {
+                            PagerTabIndicator(tabPositions, pagerState)
+                        }
+                    }
                 ) {
-                    listOf("CHATS", "CHANNELS", "PEOPLE").forEachIndexed { index, label ->
+                    TAB_LABELS.forEachIndexed { index, label ->
+                        val badge = when (index) {
+                            TAB_CHATS -> chatsBadge
+                            TAB_CHANNELS -> channelsBadge
+                            else -> 0
+                        }
                         Tab(
-                            selected = selectedTab == index,
-                            onClick = { selectedTab = index },
+                            selected = settledPage == index,
+                            onClick = {
+                                scope.launch { pagerState.animateScrollToPage(index) }
+                            },
                             text = {
-                                Text(
-                                    text = label,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    AnimatedVisibility(
+                                        visible = badge > 0,
+                                        enter = fadeIn(tween(ANIM_FAST)) + scaleIn(tween(ANIM_FAST), initialScale = 0.6f),
+                                        exit = fadeOut(tween(ANIM_FAST)) + scaleOut(tween(ANIM_FAST), targetScale = 0.6f)
+                                    ) {
+                                        Row {
+                                            Spacer(Modifier.size(6.dp))
+                                            UnreadCountBadge(badge)
+                                        }
+                                    }
+                                }
                             },
                             selectedContentColor = MaterialTheme.colorScheme.primary,
                             unselectedContentColor = colors.textMuted
@@ -146,11 +262,15 @@ fun HomeScreen(
             }
         },
         floatingActionButton = {
-            if (selectedTab != TAB_PEOPLE) {
+            AnimatedVisibility(
+                visible = settledPage != TAB_PEOPLE,
+                enter = fadeIn(tween(ANIM_FAST)) + scaleIn(tween(ANIM_FAST), initialScale = 0.8f),
+                exit = fadeOut(tween(ANIM_FAST)) + scaleOut(tween(ANIM_FAST), targetScale = 0.8f)
+            ) {
                 FloatingActionButton(
                     onClick = {
                         // Both remaining tabs start a new conversation from the people list.
-                        selectedTab = TAB_PEOPLE
+                        scope.launch { pagerState.animateScrollToPage(TAB_PEOPLE) }
                     },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -161,8 +281,16 @@ fun HomeScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            Box(modifier = Modifier.weight(1f)) {
-                when (selectedTab) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f),
+                // Only the visible page is composed. Pre-composing neighbours would build
+                // three lists at once on a cold start, which is exactly the kind of cost a
+                // low-end device feels.
+                beyondViewportPageCount = 0,
+                key = { it }
+            ) { page ->
+                when (page) {
                     TAB_CHATS -> ChatsTab(viewModel, onOpenConversation)
                     TAB_CHANNELS -> ChannelsTab(viewModel, onOpenConversation, onShowLocationChannels)
                     else -> PeopleTab(viewModel, onOpenConversation)
@@ -351,7 +479,17 @@ private fun PeopleTab(viewModel: ChatViewModel, onOpen: (ConversationId) -> Unit
 private fun ConversationList(rows: List<ConversationRow>, onOpen: (ConversationId) -> Unit) {
     LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 88.dp)) {
         items(rows, key = { it.id.encode() }) { row ->
-            ConversationRowItem(row = row, onClick = { onOpen(row.id) })
+            ConversationRowItem(
+                row = row,
+                onClick = { onOpen(row.id) },
+                // Rows reorder as conversations become most-recent; animate the move so the
+                // list does not visibly jump under the finger.
+                modifier = Modifier.animateItem(
+                    fadeInSpec = tween(ANIM_MEDIUM),
+                    placementSpec = tween(ANIM_MEDIUM),
+                    fadeOutSpec = null
+                )
+            )
             HorizontalDivider(
                 modifier = Modifier.padding(start = 78.dp),
                 color = MaterialTheme.colorScheme.outline

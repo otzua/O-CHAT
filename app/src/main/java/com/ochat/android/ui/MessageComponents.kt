@@ -46,6 +46,8 @@ import com.ochat.android.model.BitchatMessageType
 import com.ochat.android.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.animation.core.tween
+import com.ochat.android.ui.home.ANIM_MEDIUM
 import com.ochat.android.ui.home.BubbleMeta
 import com.ochat.android.ui.home.DeliveryTicks
 import com.ochat.android.ui.home.SystemMessagePill
@@ -132,7 +134,14 @@ fun MessagesList(
                     onNicknameClick = onNicknameClick,
                     onMessageLongPress = onMessageLongPress,
                     onCancelTransfer = onCancelTransfer,
-                    onImageClick = onImageClick
+                    onImageClick = onImageClick,
+                    // Arriving messages settle into place instead of appearing instantly.
+                    // Placement-only, so it costs a translation and nothing is re-laid out.
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = tween(ANIM_MEDIUM),
+                        placementSpec = tween(ANIM_MEDIUM),
+                        fadeOutSpec = null
+                    )
                 )
         }
     }
@@ -148,7 +157,8 @@ fun MessageItem(
     onNicknameClick: ((String) -> Unit)? = null,
     onMessageLongPress: ((BitchatMessage) -> Unit)? = null,
     onCancelTransfer: ((BitchatMessage) -> Unit)? = null,
-    onImageClick: ((String, List<String>, Int) -> Unit)? = null
+    onImageClick: ((String, List<String>, Int) -> Unit)? = null,
+    modifier: Modifier = Modifier
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val ochatColors = LocalOChatColors.current
@@ -158,7 +168,7 @@ fun MessageItem(
     if (message.sender == "system") {
         SystemMessagePill(
             text = message.content,
-            modifier = Modifier.padding(vertical = 4.dp)
+            modifier = modifier.padding(vertical = 4.dp)
         )
         return
     }
@@ -172,7 +182,7 @@ fun MessageItem(
     val isMedia = message.type != BitchatMessageType.Message
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 1.dp),
         horizontalArrangement = if (isSelf) Arrangement.End else Arrangement.Start
