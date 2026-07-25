@@ -2,7 +2,55 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+Entries below `OChat 1.0.0` are inherited from upstream
+[bitchat-android](https://github.com/permissionlesstech/bitchat-android).
+
+## [OChat 1.0.0]
+First release of the OChat fork. The interface is rebuilt; the networking,
+protocol and cryptography are unchanged from upstream bitchat.
+
+### Added
+- Conversation list home screen with **Chats**, **Channels** and **People** tabs
+- Full-screen conversation view, replacing the private-chat bottom sheet
+- Message bubbles: own messages right on amber, others left on slate
+- Delivery ticks drawn as vector paths, with a distinct read state
+- Centered pills for system notices
+- Amber-on-near-black dark theme and a matching light theme
+- First-run welcome dialog, a credit line under the conversation list, and a
+  credit block in the About sheet
+- `docs/BRANDING.md` documenting the palette, icon replacement and the values
+  that must not be renamed
+
+### Changed
+- Package renamed `com.bitchat.android` to `com.ochat.android`; applicationId
+  `com.bitchat.droid` to `com.ochat.droid`. OChat therefore installs alongside
+  bitchat rather than replacing it.
+- Typography from monospace to sans-serif. Monospace is retained for
+  fingerprints, geohashes, debug output and the Matrix animation.
+- Back navigation is owned by the NavHost
+- Release artifacts renamed to `ochat-*.apk`
+- Issue, discussion and PR templates point at this fork
+
+### Removed
+- All emoji from the English interface strings, replaced with vector icons
+  where an icon was warranted
+
+### Fixed
+- Back press no longer ends a private chat without leaving the screen. An
+  activity-level `OnBackPressedCallback` ran before Navigation and consumed the
+  press, so the nav stack never popped.
+- Licence corrected to GPL-3.0. It had been described as MIT in the app credits
+  and branding doc, which was wrong: `LICENSE.md` is the full GPL-3.0 text.
+
+### Unchanged (deliberately)
+- The `bitchat1:` Nostr DM wire prefix, the BLE service and characteristic
+  UUIDs, the binary protocol, the Noise handshake, and all SharedPreferences
+  file names. OChat remains protocol-compatible with unmodified bitchat clients.
+
+---
+
 ## [1.4.0] - 2025-10-15
 ### Fixed
 - fix: Resolve debug settings bottom sheet crash on some devices (Issue #472)
