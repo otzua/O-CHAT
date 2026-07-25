@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Podcasts
 import androidx.compose.material.icons.filled.Star
@@ -124,7 +125,8 @@ fun HomeScreen(
     viewModel: ChatViewModel,
     onOpenConversation: (ConversationId) -> Unit,
     onShowLocationChannels: () -> Unit,
-    onShowAppInfo: () -> Unit
+    onShowAppInfo: () -> Unit,
+    onOpenProfile: () -> Unit
 ) {
     val colors = LocalOChatColors.current
     var menuExpanded by remember { mutableStateOf(false) }
@@ -141,6 +143,7 @@ fun HomeScreen(
     val unreadPrivate by viewModel.unreadPrivateMessages.collectAsStateWithLifecycle()
     val unreadChannels by viewModel.unreadChannelMessages.collectAsStateWithLifecycle()
     val connectedPeers by viewModel.connectedPeers.collectAsStateWithLifecycle()
+    val nickname by viewModel.nickname.collectAsStateWithLifecycle()
     val myPeerID = viewModel.myPeerID
 
     val chatsBadge = unreadPrivate.size
@@ -182,6 +185,20 @@ fun HomeScreen(
                         }
                     },
                     actions = {
+                        // Your own avatar opens the profile. This is where people look for
+                        // "who am I / change my name", and it doubles as a reminder of how
+                        // you appear to others.
+                        Box(
+                            modifier = Modifier
+                                .clickable(onClick = onOpenProfile)
+                                .padding(6.dp)
+                        ) {
+                            ConversationAvatar(
+                                title = nickname.ifEmpty { "?" },
+                                seed = myPeerID,
+                                size = 32.dp
+                            )
+                        }
                         Box {
                             androidx.compose.material3.IconButton(onClick = { menuExpanded = true }) {
                                 Icon(
@@ -194,6 +211,14 @@ fun HomeScreen(
                                 expanded = menuExpanded,
                                 onDismissRequest = { menuExpanded = false }
                             ) {
+                                DropdownMenuItem(
+                                    text = { Text("Profile and settings") },
+                                    leadingIcon = { Icon(Icons.Filled.Person, null) },
+                                    onClick = {
+                                        menuExpanded = false
+                                        onOpenProfile()
+                                    }
+                                )
                                 DropdownMenuItem(
                                     text = { Text("Location channels") },
                                     leadingIcon = { Icon(Icons.Filled.Place, null) },

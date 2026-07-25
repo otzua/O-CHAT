@@ -31,6 +31,7 @@ import com.ochat.android.ui.VerificationSheet
 import com.ochat.android.ui.debug.DebugSettingsSheet
 
 private const val ROUTE_HOME = "home"
+private const val ROUTE_PROFILE = "profile"
 private const val ARG_CONVERSATION = "conversation"
 private const val ROUTE_CONVERSATION = "conversation/{$ARG_CONVERSATION}"
 
@@ -92,7 +93,23 @@ fun OChatApp(viewModel: ChatViewModel) {
                     navController.navigate("conversation/${id.encode()}")
                 },
                 onShowLocationChannels = { showLocationChannels = true },
-                onShowAppInfo = { viewModel.showAppInfo() }
+                onShowAppInfo = { viewModel.showAppInfo() },
+                onOpenProfile = { navController.navigate(ROUTE_PROFILE) }
+            )
+        }
+        composable(
+            route = ROUTE_PROFILE,
+            enterTransition = {
+                slideInHorizontally(tween(ANIM_SLOW)) { it / 4 } + fadeIn(tween(ANIM_MEDIUM))
+            },
+            exitTransition = { fadeOut(tween(ANIM_FAST)) },
+            popExitTransition = {
+                slideOutHorizontally(tween(ANIM_SLOW)) { it / 4 } + fadeOut(tween(ANIM_MEDIUM))
+            }
+        ) {
+            ProfileScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() }
             )
         }
         composable(
